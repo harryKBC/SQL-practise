@@ -1,0 +1,221 @@
+--Harrison Kinbacher
+--S3559087
+--Assignment2
+
+--task 1
+
+--question 1.1
+select count (*)
+from interest
+where descrip is null
+
+
+--question 1.2
+select DISTINCT instname
+from department
+where state is "NSW" or state is "WA"
+ORDER BY instname DESC
+
+--question 1.3
+select field.TITLE, count(*) AS Count
+from field
+group by field.TITLE
+
+--question 1.4
+select academic.ACNUM, academic.FAMNAME, academic.GIVENAME
+from paper inner join Author
+on Author.PANUM = paper.PANUM 
+inner join academic on author.ACNUM = academic.ACNUM
+where paper.TITLE like '%spline%'
+
+--question 1.5
+select department.INSTNAME, department.DEPTNAME
+from department left join academic
+on academic.DEPTNUM = department.DEPTNUM
+where(department.STATE like 'QLD' or department.STATE like 'Qld') and academic.ACNUM is null
+
+                
+--question 1.6
+select DISTINCT e.acnum, e.famname, e.givename
+from author as a inner join academic as b
+on a.acnum = b.acnum
+join author as c
+on c.panum = a.panum
+join academic e
+on e.acnum = c.acnum
+where b.famname = 'Baliga' and e.famname <> 'Baliga'
+
+
+--task 2
+
+--queston 2.1
+
+select department.INSTNAME, department.DEPTNAME
+from department
+where (department.STATE like 'QLD' or department.STATE like 'Qld') 
+and department.DEPTNUM not in (select academic.DEPTNUM
+                            from academic)
+
+
+--queston 2.2
+select department.INSTNAME, department.DEPTNAME
+from department
+where (department.STATE like 'QLD' or department.STATE like 'Qld') 
+and not EXISTS (select*
+            from academic
+            where academic.DEPTNUM = department.DEPTNUM)
+
+
+--queston 2.3
+
+select DISTINCT academic.acnum,academic.givename, academic.famname
+from academic
+where academic.famname <> 'Baliga' and academic.ACNUM in (select author.ACNUM
+                        from author
+                        where author.PANUM in (select author.PANUM
+                                             from author
+                                             where author.ACNUM = ( select academic.acnum 
+                                                                    from academic
+                                                                    where academic.FAMNAME = 'Baliga')
+                                
+ ))
+
+
+--queston 2.4
+
+select d as "DEPTNAME"
+from (select b as "d", max("a")
+            from
+           (select department.DEPTNAME as "b", count(*) as "a"
+            from department join academic
+             where department.DEPTNUM = academic.DEPTNUM
+             group by department.DEPTNUM))
+
+
+
+--task 3
+
+--queston 3.1
+
+select academic.ACNUM
+from(select academic.ACNUM, count(*) as "a"
+    from academic join interest
+    on academic.ACNUM = interest.ACNUM
+    group by interest.ACNUM
+    having a > 4)
+except
+select author.ACNUM
+from author
+
+
+--queston 3.2
+
+select DISTINCT interest.ACNUM
+from interest
+where interest.FIELDNUM in (select interest.FIELDNUM
+    from interest
+    where interest.ACNUM = 114
+    intersect
+    select interest.FIELDNUM
+    from interest) and interest.ACNUM <>  114
+
+
+--queston 3.3
+
+select department.DEPTNAME, department.INSTNAME
+from department
+where department.STATE like 'QLD' or department.STATE like 'Qld'
+
+except
+
+select distinct department.DEPTNAME, department.INSTNAME
+from department join academic
+on department.DEPTNUM = academic.DEPTNUM
+where department.STATE like 'QLD' or department.STATE like 'Qld'
+
+
+
+
+--task 4
+
+
+--question 4.1
+
+create table Member(
+memberID INT NOT NULL,
+firstName varchar(40),
+surname varchar(40),
+phone int,
+PRIMARY KEY (memberID)
+)
+
+--
+
+create table Workshop(
+workshopID INT NOT NULL,
+title varchar(40),
+sessionDate DATE,
+price DECIMAL(4,2),
+qtyremaining int,
+PRIMARY KEY (workshopID),
+CHECK (qtyremaining >=0),
+CHECK (price >= 0)
+)
+
+--
+
+create table Booking(
+memberID int not null,
+workshopID int not null,
+qtyTickets int not null,
+FOREIGN KEY (memberID) REFERENCES Member(memberID),
+FOREIGN KEY (workshopID) REFERENCES Workshop(workshopID),
+CHECK (qtyTickets>0)
+)
+
+
+
+--question 4.2
+
+Insert Into Member  values  (1000, 'Aksha', 'shaikh', 0456123456),
+                            (1001, 'Eric', 'Rostron', 0439774776),
+                            (1002, 'Zhe', 'Ding', 0459914321)
+
+--
+
+Insert Into workshop  values  (100, 'Firing a steam locomotive', date('2021-12-31'),89.95,2),
+                              (101, 'Rail signalling', date('2021-12-17'),55.50,9),
+                              (102, 'Shunt rolling stock', date('2021-02-03'),78.00,6)
+
+--
+
+Insert Into Booking  values   (1001,102,2),
+                              (1000,101,1),
+                              (1002,102,1)
+
+
+--question 4.3
+
+
+create view sales as
+select workshop.workshopID, workshop.title, strftime('%d/%m/%Y',workshop.sessionDate) as "date", booking.qtyTickets as "total Sales", workshop.qtyremaining
+from workshop join booking
+on workshop.workshopID = booking.workshopID
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
